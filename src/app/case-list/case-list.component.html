@@ -1,6 +1,9 @@
 <section>
   <h3>Case List</h3>
-  <input matInput type="text" #search>
+  <mat-form-field appearance="fill">
+    <mat-label>Search</mat-label>
+    <input matInput type="text" #search>
+  </mat-form-field>
   <mat-button-toggle-group name="caseType" [value]="defaultCaseType" #caseType>
     <mat-button-toggle value="active">Active</mat-button-toggle>
     <mat-button-toggle value="canceled">Canceled</mat-button-toggle>

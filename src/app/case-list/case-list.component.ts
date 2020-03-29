@@ -1,6 +1,6 @@
 import { Component, OnInit, AfterViewInit, ViewChild, ElementRef } from '@angular/core';
-import { fromEvent, merge, of, combineLatest, Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { fromEvent, merge, of, combineLatest, Observable, Subject, OperatorFunction } from 'rxjs';
+import { map, debounceTime, distinctUntilChanged, filter, tap } from 'rxjs/operators';
 import { MatButtonToggleGroup } from '@angular/material/button-toggle';
 import { FetchInput, Sort, CaseListDataSource } from './case-list.datasource';
 import { Case } from './case-list.models';
@@ -41,16 +41,35 @@ export class CaseListComponent implements OnInit, AfterViewInit {
 			fromEvent<InputEvent>(this.search.nativeElement, 'input').pipe(
 				map((e) => {
 					const input = e.target as HTMLInputElement;
-					return input.value;
-				})
+					return input.value.trim();
+				}),
+				debounceTime(500),
+				distinctUntilChanged()
 			)
 		);
 		const sort$ = merge<Sort>(of({}), this.sort.sortChange);
 		const page: Page = this.paginator;
 		const paginator$ = merge<Page>(of(page), this.paginator.page);
+
 		const input$: Observable<FetchInput> = combineLatest([ caseType$, search$, sort$, paginator$ ]).pipe(
-			map(([ type, search, sort, { pageIndex, pageSize } ]) => ({ type, search, sort, pageIndex, pageSize }))
+			map(([ type, search, sort, { pageIndex, pageSize } ]) => ({ type, search, sort, pageIndex, pageSize })),
+			checkSearch(this.paginator)
 		);
 		input$.subscribe(this.dataSource.fetch_);
 	}
+}
+
+function checkSearch(paginator: MatPaginator): OperatorFunction<FetchInput, FetchInput> {
+	let previousSearch: string = '';
+	return map(({ type, search, sort, pageIndex, pageSize }) => {
+		if (search != previousSearch) {
+			console.log(`Search changed ${previousSearch} -> ${search}`);
+			if (paginator.pageIndex > 0) {
+				pageIndex = 0;
+				paginator.pageIndex = pageIndex;
+			}
+		}
+		previousSearch = search;
+		return { type, search, sort, pageIndex, pageSize };
+	});
 }

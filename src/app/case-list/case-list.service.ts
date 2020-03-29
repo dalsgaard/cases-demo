@@ -50,10 +50,37 @@ export class CaseListService {
 		sort: Sort
 	): Observable<CaseListResponse> {
 		const start = pageIndex * pageSize;
-		const list = CASE_LIST;
+		const list = sortCaseList(searchCaseList(CASE_LIST, search), sort);
 		const count = list.length;
-		const items = CASE_LIST.slice(start, start + pageSize);
+		const items = list.slice(start, start + pageSize);
+		console.log('Fetch...', items, count);
 		const response: CaseListResponse = { items, count };
 		return of(response).pipe(delay(1000));
+	}
+}
+
+function sortCaseList(list: Case[], sort: Sort): Case[] {
+	if (sort.direction) {
+		const d = sort.direction === 'asc' ? 1 : -1;
+		return list.sort((a, b) => {
+			const p = sort.active;
+			if (a[p] < b[p]) {
+				return -1 * d;
+			}
+			if (a[p] > b[p]) {
+				return 1 * d;
+			}
+			return 0;
+		});
+	} else {
+		return list;
+	}
+}
+
+function searchCaseList(list: Case[], search: string): Case[] {
+	if (search) {
+		return list.filter(({ id }) => id.includes(search));
+	} else {
+		return list;
 	}
 }
