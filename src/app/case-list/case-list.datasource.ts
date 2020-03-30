@@ -1,7 +1,7 @@
 import { DataSource } from '@angular/cdk/table';
 import { Case } from './case-list.models';
 import { CollectionViewer } from '@angular/cdk/collections';
-import { Observable, Subscriber, BehaviorSubject } from 'rxjs';
+import { Observable, Subscriber, BehaviorSubject, Subscription } from 'rxjs';
 import { Sort, CaseListApi, CaseListResponse } from './case-list.service';
 import { map, concatAll, share } from 'rxjs/operators';
 
@@ -30,6 +30,7 @@ export class CaseListDataSource implements DataSource<Case> {
 	private fetch$: Observable<FetchInput>;
 	private _source$ = new BehaviorSubject<Case[]>([]);
 	private _count$ = new BehaviorSubject<number>(0);
+	private subscriptions = new Subscription();
 
 	public get source$(): Observable<Case[]> {
 		return this._source$;
@@ -49,14 +50,16 @@ export class CaseListDataSource implements DataSource<Case> {
 			concatAll(),
 			share()
 		);
-		response$.pipe(map(({ items }) => items)).subscribe(this._source$);
-		response$.pipe(map(({ count }) => count)).subscribe(this._count$);
+		this.subscriptions.add(response$.pipe(map(({ items }) => items)).subscribe(this._source$));
+		this.subscriptions.add(response$.pipe(map(({ count }) => count)).subscribe(this._count$));
 	}
 
 	connect(collectionViewer: CollectionViewer): Observable<Case[]> {
 		return this._source$;
 	}
-	disconnect(collectionViewer: CollectionViewer): void {}
+	disconnect(collectionViewer: CollectionViewer): void {
+		this.subscriptions.unsubscribe();
+	}
 }
 
 export { Sort };

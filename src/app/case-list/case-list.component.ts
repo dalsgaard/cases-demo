@@ -1,5 +1,5 @@
-import { Component, OnInit, AfterViewInit, ViewChild, ElementRef } from '@angular/core';
-import { fromEvent, merge, of, combineLatest, Observable, Subject, OperatorFunction } from 'rxjs';
+import { Component, OnInit, AfterViewInit, ViewChild, ElementRef, OnDestroy } from '@angular/core';
+import { fromEvent, merge, of, combineLatest, Observable, Subject, OperatorFunction, Subscription } from 'rxjs';
 import { map, debounceTime, distinctUntilChanged, filter, tap } from 'rxjs/operators';
 import { MatButtonToggleGroup } from '@angular/material/button-toggle';
 import { FetchInput, Sort, CaseListDataSource } from './case-list.datasource';
@@ -18,7 +18,7 @@ type Page = {
 	templateUrl: './case-list.component.html',
 	styleUrls: [ './case-list.component.css' ]
 })
-export class CaseListComponent implements OnInit, AfterViewInit {
+export class CaseListComponent implements OnInit, OnDestroy, AfterViewInit {
 	@ViewChild('search') search: ElementRef<HTMLInputElement>;
 	@ViewChild('caseType', { read: MatButtonToggleGroup })
 	caseType: MatButtonToggleGroup;
@@ -27,12 +27,16 @@ export class CaseListComponent implements OnInit, AfterViewInit {
 	defaultCaseType = 'active';
 	displayedColumns: string[] = [ 'id', 'brand', 'model' ];
 	dataSource: CaseListDataSource;
+	private subscriptions = new Subscription();
 
 	constructor(private service: CaseListService) {
 		this.dataSource = new CaseListDataSource(this.service);
 	}
-
 	ngOnInit(): void {}
+
+	ngOnDestroy(): void {
+		this.subscriptions.unsubscribe();
+	}
 
 	ngAfterViewInit(): void {
 		const caseType$ = merge<string>(of(this.caseType.value), this.caseType.change.pipe(map((e) => e.value)));
@@ -55,7 +59,7 @@ export class CaseListComponent implements OnInit, AfterViewInit {
 			map(([ type, search, sort, { pageIndex, pageSize } ]) => ({ type, search, sort, pageIndex, pageSize })),
 			checkSearch(this.paginator)
 		);
-		input$.subscribe(this.dataSource.fetch_);
+		this.subscriptions.add(input$.subscribe(this.dataSource.fetch_));
 	}
 }
 
