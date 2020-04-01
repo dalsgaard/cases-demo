@@ -2,8 +2,9 @@ import { Injectable } from '@angular/core';
 import { Observable, of } from 'rxjs';
 import { Case } from './case-list.models';
 import { delay } from 'rxjs/operators';
+import { Sort } from '../utils/sort';
 
-const CASE_LIST: Case[] = [
+const ACTIVE_LIST: Case[] = [
 	{ id: '101', brand: 'Simca', model: '1307' },
 	{ id: '201', brand: 'Simca', model: '1308' },
 	{ id: '302', brand: 'Simca', model: '1100' },
@@ -16,10 +17,14 @@ const CASE_LIST: Case[] = [
 	{ id: '604', brand: 'Ford', model: 'Capri' }
 ];
 
-export type Sort = {
-	active?: string;
-	direction?: 'asc' | 'desc' | '';
-};
+const CANCELED_LIST: Case[] = [
+	{ id: '101', brand: 'Simca', model: '1307' },
+	{ id: '302', brand: 'Simca', model: '1100' },
+	{ id: '303', brand: 'Talbot', model: '1308' },
+	{ id: '401', brand: 'Opel', model: 'Kadett' },
+	{ id: '602', brand: 'Opel', model: 'Ascona' },
+	{ id: '604', brand: 'Ford', model: 'Capri' }
+];
 
 export type CaseListResponse = {
 	items: Case[];
@@ -49,11 +54,13 @@ export class CaseListService {
 		search: string,
 		sort: Sort
 	): Observable<CaseListResponse> {
+		console.log(type);
+		let list = type === 'canceled' ? CANCELED_LIST : ACTIVE_LIST;
 		const start = pageIndex * pageSize;
-		const list = sortCaseList(searchCaseList(CASE_LIST, search), sort);
+		list = sortCaseList(searchCaseList(list, search), sort);
 		const count = list.length;
 		const items = list.slice(start, start + pageSize);
-		console.log('Fetch...', items, count);
+		console.log('Fetch...', items, count, sort);
 		const response: CaseListResponse = { items, count };
 		return of(response).pipe(delay(1000));
 	}
@@ -62,7 +69,8 @@ export class CaseListService {
 function sortCaseList(list: Case[], sort: Sort): Case[] {
 	if (sort.direction) {
 		const d = sort.direction === 'asc' ? 1 : -1;
-		return list.sort((a, b) => {
+		const l = [ ...list ];
+		return l.sort((a, b) => {
 			const p = sort.active;
 			if (a[p] < b[p]) {
 				return -1 * d;

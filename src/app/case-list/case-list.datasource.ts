@@ -2,8 +2,9 @@ import { DataSource } from '@angular/cdk/table';
 import { Case } from './case-list.models';
 import { CollectionViewer } from '@angular/cdk/collections';
 import { Observable, Subscriber, BehaviorSubject, Subscription } from 'rxjs';
-import { Sort, CaseListApi, CaseListResponse } from './case-list.service';
+import { CaseListApi, CaseListResponse } from './case-list.service';
 import { map, concatAll, share } from 'rxjs/operators';
+import { Sort, Next, createNext } from '../utils';
 
 export type FetchInput = {
 	type: string;
@@ -12,18 +13,6 @@ export type FetchInput = {
 	pageIndex: number;
 	pageSize: number;
 };
-
-interface Next<T> {
-	next(input: T): void;
-}
-
-class NextImpl<T> implements Next<T> {
-	constructor(private subscriber: Subscriber<T>) {}
-
-	next(input: T) {
-		this.subscriber.next(input);
-	}
-}
 
 export class CaseListDataSource implements DataSource<Case> {
 	public fetch_: Next<FetchInput>;
@@ -41,7 +30,7 @@ export class CaseListDataSource implements DataSource<Case> {
 
 	constructor(private api: CaseListApi) {
 		this.fetch$ = new Observable((Subscriber) => {
-			this.fetch_ = new NextImpl(Subscriber);
+			this.fetch_ = createNext(Subscriber);
 		});
 		const response$: Observable<CaseListResponse> = this.fetch$.pipe(
 			map(({ type, search, sort, pageIndex, pageSize }) => {

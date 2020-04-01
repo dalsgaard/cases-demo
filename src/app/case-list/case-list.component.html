@@ -8,7 +8,7 @@
     <mat-button-toggle value="active">Active</mat-button-toggle>
     <mat-button-toggle value="canceled">Canceled</mat-button-toggle>
   </mat-button-toggle-group>
-  <table mat-table matSort [dataSource]="dataSource" style="min-width: 600px;"  class="mat-elevation-z8">
+  <table mat-table matSort [dataSource]="dataSource" [matSortActive]="sortStore.sort?.active" [matSortDirection]="sortStore.sort?.direction" style="min-width: 600px;"  class="mat-elevation-z8">
     <ng-container matColumnDef="id">
       <th mat-header-cell *matHeaderCellDef mat-sort-header> Id </th>
       <td mat-cell *matCellDef="let case"> {{case.id}} </td>

@@ -7,6 +7,7 @@ import { Case } from './case-list.models';
 import { MatSort } from '@angular/material/sort';
 import { MatPaginator } from '@angular/material/paginator';
 import { CaseListService } from './case-list.service';
+import { SortStore } from '../utils';
 
 type Page = {
 	pageIndex: number;
@@ -27,6 +28,7 @@ export class CaseListComponent implements OnInit, OnDestroy, AfterViewInit {
 	defaultCaseType = 'active';
 	displayedColumns: string[] = [ 'id', 'brand', 'model' ];
 	dataSource: CaseListDataSource;
+	private sortStore = new SortStore('case-list');
 	private subscriptions = new Subscription();
 
 	constructor(private service: CaseListService) {
@@ -35,6 +37,7 @@ export class CaseListComponent implements OnInit, OnDestroy, AfterViewInit {
 	ngOnInit(): void {}
 
 	ngOnDestroy(): void {
+		this.sortStore.dispose();
 		this.subscriptions.unsubscribe();
 	}
 
@@ -51,7 +54,8 @@ export class CaseListComponent implements OnInit, OnDestroy, AfterViewInit {
 				distinctUntilChanged()
 			)
 		);
-		const sort$ = merge<Sort>(of({}), this.sort.sortChange);
+		const { active, direction } = this.sort;
+		const sort$ = merge<Sort>(of({ active, direction }), this.sort.sortChange);
 		const page: Page = this.paginator;
 		const paginator$ = merge<Page>(of(page), this.paginator.page);
 
@@ -60,6 +64,7 @@ export class CaseListComponent implements OnInit, OnDestroy, AfterViewInit {
 			checkSearch(this.paginator)
 		);
 		this.subscriptions.add(input$.subscribe(this.dataSource.fetch_));
+		this.subscriptions.add(this.sort.sortChange.subscribe(this.sortStore.sort_));
 	}
 }
 
