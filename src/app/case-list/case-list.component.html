@@ -2,27 +2,40 @@
   <h3>Case List</h3>
   <mat-form-field appearance="fill">
     <mat-label>Search</mat-label>
-    <input matInput type="text" #search>
+    <input matInput type="text" [value]="searchParam$ | async" #search />
   </mat-form-field>
   <mat-button-toggle-group name="caseType" [value]="defaultCaseType" #caseType>
     <mat-button-toggle value="active">Active</mat-button-toggle>
     <mat-button-toggle value="canceled">Canceled</mat-button-toggle>
   </mat-button-toggle-group>
-  <table mat-table matSort [dataSource]="dataSource" [matSortActive]="sortStore.sort?.active" [matSortDirection]="sortStore.sort?.direction" style="min-width: 600px;"  class="mat-elevation-z8">
+  <table
+    mat-table
+    matSort
+    [dataSource]="dataSource"
+    [matSortActive]="sortStore.sort?.active"
+    [matSortDirection]="sortStore.sort?.direction"
+    style="min-width: 600px;"
+    class="mat-elevation-z8"
+  >
     <ng-container matColumnDef="id">
-      <th mat-header-cell *matHeaderCellDef mat-sort-header> Id </th>
-      <td mat-cell *matCellDef="let case"> {{case.id}} </td>
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Id</th>
+      <td mat-cell *matCellDef="let case">{{ case.id }}</td>
     </ng-container>
     <ng-container matColumnDef="brand">
-      <th mat-header-cell *matHeaderCellDef mat-sort-header> Brand </th>
-      <td mat-cell *matCellDef="let case"> {{case.brand}} </td>
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Brand</th>
+      <td mat-cell *matCellDef="let case">{{ case.brand }}</td>
     </ng-container>
     <ng-container matColumnDef="model">
-      <th mat-header-cell *matHeaderCellDef mat-sort-header> Model </th>
-      <td mat-cell *matCellDef="let case"> {{case.model}} </td>
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Model</th>
+      <td mat-cell *matCellDef="let case">{{ case.model }}</td>
     </ng-container>
     <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-    <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+    <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
   </table>
-  <mat-paginator [length]="dataSource.count$ | async" [pageSizeOptions]="[2, 5, 10]" showFirstLastButtons></mat-paginator>
+
+  <mat-paginator
+    [length]="dataSource.count$ | async"
+    [pageSizeOptions]="[2, 5, 10]"
+    showFirstLastButtons
+  ></mat-paginator>
 </section>

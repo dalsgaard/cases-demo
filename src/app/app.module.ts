@@ -8,21 +8,24 @@ import { MatTableModule } from '@angular/material/table';
 import { MatSortModule } from '@angular/material/sort';
 import { MatPaginatorModule } from '@angular/material/paginator';
 
+import { AppRoutingModule } from './app-routing/app-routing.module';
 import { AppComponent } from './app.component';
 import { CaseListComponent } from './case-list/case-list.component';
+import { DashboardComponent } from './dashboard/dashboard.component';
 
 @NgModule({
-	declarations: [ AppComponent, CaseListComponent ],
-	imports: [
-		BrowserModule,
-		NoopAnimationsModule,
-		MatInputModule,
-		MatButtonToggleModule,
-		MatTableModule,
-		MatSortModule,
-		MatPaginatorModule
-	],
-	providers: [],
-	bootstrap: [ AppComponent ]
+  declarations: [AppComponent, CaseListComponent, DashboardComponent],
+  imports: [
+    BrowserModule,
+    AppRoutingModule,
+    NoopAnimationsModule,
+    MatInputModule,
+    MatButtonToggleModule,
+    MatTableModule,
+    MatSortModule,
+    MatPaginatorModule
+  ],
+  providers: [],
+  bootstrap: [AppComponent]
 })
 export class AppModule {}
