@@ -32,6 +32,7 @@
     <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
     <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
   </table>
+  <div>{{ dataSource.loading$ | async }}</div>
 
   <mat-paginator
     [length]="dataSource.count$ | async"
