@@ -4,7 +4,7 @@ import {
   AfterViewInit,
   ViewChild,
   ElementRef,
-  OnDestroy
+  OnDestroy,
 } from '@angular/core';
 import {
   fromEvent,
@@ -14,7 +14,7 @@ import {
   Observable,
   Subject,
   OperatorFunction,
-  Subscription
+  Subscription,
 } from 'rxjs';
 import {
   map,
@@ -22,7 +22,7 @@ import {
   distinctUntilChanged,
   filter,
   tap,
-  first
+  first,
 } from 'rxjs/operators';
 import { MatButtonToggleGroup } from '@angular/material/button-toggle';
 import { FetchInput, Sort, CaseListDataSource } from './case-list.datasource';
@@ -32,6 +32,7 @@ import { MatPaginator } from '@angular/material/paginator';
 import { CaseListService } from './case-list.service';
 import { SortStore } from '../utils';
 import { ActivatedRoute } from '@angular/router';
+import { SelectionModel } from '@angular/cdk/collections';
 
 type Page = {
   pageIndex: number;
@@ -41,7 +42,7 @@ type Page = {
 @Component({
   selector: 'app-case-list',
   templateUrl: './case-list.component.html',
-  styleUrls: ['./case-list.component.css']
+  styleUrls: ['./case-list.component.css'],
 })
 export class CaseListComponent implements OnInit, OnDestroy, AfterViewInit {
   @ViewChild('search') search: ElementRef<HTMLInputElement>;
@@ -50,20 +51,28 @@ export class CaseListComponent implements OnInit, OnDestroy, AfterViewInit {
   @ViewChild(MatSort) sort: MatSort;
   @ViewChild(MatPaginator) paginator: MatPaginator;
   defaultCaseType = 'active';
-  displayedColumns: string[] = ['id', 'brand', 'model'];
+  displayedColumns: string[] = ['select', 'id', 'brand', 'model'];
   dataSource: CaseListDataSource;
   sortStore = new SortStore('case-list');
   searchParam$!: Observable<string>;
+  selection = new SelectionModel<Case>(true, []);
   private subscriptions = new Subscription();
 
   constructor(private route: ActivatedRoute, private service: CaseListService) {
     this.dataSource = new CaseListDataSource(this.service);
+    this.subscriptions.add(
+      this.dataSource.loading$.subscribe((loading) => {
+        if (loading) {
+          this.selection.clear();
+        }
+      })
+    );
   }
 
   ngOnInit(): void {
     this.searchParam$ = this.route.queryParams.pipe(
-      map(params => params['search'] as string),
-      first(search => search != null)
+      map((params) => params['search'] as string),
+      first((search) => search != null)
     );
   }
 
@@ -75,13 +84,13 @@ export class CaseListComponent implements OnInit, OnDestroy, AfterViewInit {
   ngAfterViewInit(): void {
     const caseType$ = merge<string>(
       of(this.caseType.value),
-      this.caseType.change.pipe(map(e => e.value))
+      this.caseType.change.pipe(map((e) => e.value))
     );
     const search$ = merge(
       of(''),
       this.searchParam$,
       fromEvent<InputEvent>(this.search.nativeElement, 'input').pipe(
-        map(e => {
+        map((e) => {
           const input = e.target as HTMLInputElement;
           return input.value.trim();
         }),
@@ -98,14 +107,14 @@ export class CaseListComponent implements OnInit, OnDestroy, AfterViewInit {
       caseType$,
       search$,
       sort$,
-      paginator$
+      paginator$,
     ]).pipe(
       map(([type, search, sort, { pageIndex, pageSize }]) => ({
         type,
         search,
         sort,
         pageIndex,
-        pageSize
+        pageSize,
       })),
       checkSearch(this.paginator)
     );
@@ -113,6 +122,20 @@ export class CaseListComponent implements OnInit, OnDestroy, AfterViewInit {
     this.subscriptions.add(
       this.sort.sortChange.subscribe(this.sortStore.sort_)
     );
+  }
+
+  isAllSelected() {
+    const numSelected = this.selection.selected.length;
+    const numRows = this.dataSource.source.length;
+    return numSelected === numRows;
+  }
+
+  masterToggle() {
+    if (this.isAllSelected()) {
+      this.selection.clear();
+    } else {
+      this.dataSource.source.forEach((row) => this.selection.select(row));
+    }
   }
 }
 
